@@ -7,7 +7,9 @@ import operator
 from collections import Counter
 from nltk.corpus import stopwords
 import string
-from nltk import bigrams 
+from nltk import bigrams
+from collections import defaultdict
+import sys
 
 # used for authentication, OAUTH
 consumer_key = 'Ro42n9uw4qqUygzjxAWd8C3EU'
@@ -59,12 +61,20 @@ def preprocess(s, lowercase=False):
 # nltk.download('stopwords')
 
 punctuation = list(string.punctuation)
-stop = stopwords.words('english') + punctuation + ['RT', 'via']
+# Making list of some useless words, punctuations and emoticons which hinders aur analysis. e.g. to, if, as, ... 
+stop = stopwords.words('english') + punctuation + ['RT', 'via', u'\u2026', u'\u261e'] # some emoticons included
+
+com = defaultdict(lambda : defaultdict(int))
+
+search_word = sys.argv[1]
 
 fname = 'python.json'
+# Json data set opening
 with open(fname, 'r') as f:
     count_all = Counter()
+    count_search = Counter()
     for line in f:
+        # Loads as dictionary
         tweet = json.loads(line)
         # Create a list with all the terms
         terms_all = [term for term in preprocess(tweet['text']) if term not in stop]
@@ -82,7 +92,33 @@ with open(fname, 'r') as f:
                     # mind the ((double brackets))
                     # startswith() takes a tuple (not a list) if 
                     # we pass a list of inputs
-        # Update the counter
+        # Update the counter as per name suggests
         count_all.update(terms_bigram)
+
+        # Updates the counter if search_word in terms_only
+        if search_word in terms_only:
+            count_search.update(terms_only)
+    
+        # Build co-occurence matrix
+        for i in range(len(terms_only) - 1):
+            for j in range(i+1, len(terms_only)):
+                w1, w2 = sorted([terms_only[i], terms_only[j]])
+                if w1 != w2:
+                    com[w1][w2] += 1
+
+    # Prints the result for co-occurences for search_word
+    print("Co-occurences for %s" %search_word)
+    print(count_search.most_common(10))
+
+    com_max = []
+    # For each term, look for most common co-occurent terms
+    for t1 in com:
+        t1_max_terms = sorted(com[t1].items(), key=operator.itemgetter(1))
+        for t2, t2_count in t1_max_terms:
+            com_max.append(((t1, t2), t2_count))
+    # Get the most frequent co-occurences
+    term_max = sorted(com_max, key=operator.itemgetter(1), reverse=True)
+    """print(term_max[:5])"""
+
     # Print the first 5 most frequent words
-    print(count_all.most_common(10))
+    """print(count_all.most_common(10))"""
