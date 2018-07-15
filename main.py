@@ -10,6 +10,7 @@ import string
 from nltk import bigrams
 from collections import defaultdict
 import sys
+import vincent
 
 # used for authentication, OAUTH
 consumer_key = 'Ro42n9uw4qqUygzjxAWd8C3EU'
@@ -66,7 +67,9 @@ stop = stopwords.words('english') + punctuation + ['RT', 'via', u'\u2026', u'\u2
 
 com = defaultdict(lambda : defaultdict(int))
 
-search_word = sys.argv[1]
+# Taking search word
+# search_word = sys.argv[1]
+search_word = "python"
 
 fname = 'python.json'
 # Json data set opening
@@ -93,7 +96,7 @@ with open(fname, 'r') as f:
                     # startswith() takes a tuple (not a list) if 
                     # we pass a list of inputs
         # Update the counter as per name suggests
-        count_all.update(terms_bigram)
+        count_all.update(terms_only)
 
         # Updates the counter if search_word in terms_only
         if search_word in terms_only:
@@ -122,3 +125,9 @@ with open(fname, 'r') as f:
 
     # Print the first 5 most frequent words
     """print(count_all.most_common(10))"""
+
+    word_freq = count_all.most_common(10)
+    labels, freq = zip(*word_freq)
+    data = {'data':freq, 'x':labels}
+    bar = vincent.Bar(data, iter_idx='x')
+    bar.to_json('term_freq.json')
