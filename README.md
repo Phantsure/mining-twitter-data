@@ -4,7 +4,7 @@ Part 1: Collecting data<br />
 Part 2: Text Pre-processing<br />
 Part 3: Term Frequencies<br />
 Part 4: Term Co-Occurrences<br />
-Part 5: Data Visualisation Basics(not implemented yet)<br />
+Part 5: Data Visualisation Basics<br />
 Part 6: Sentiment Analysis Basics(not implemented yet)<br />
 Part 7: Geolocation and Interactive Maps(not implemented yet)<br />
 
