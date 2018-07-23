@@ -10,7 +10,10 @@ import string
 from nltk import bigrams
 from collections import defaultdict
 import sys
+# Data Visualisation
 import vincent
+# Time Series Visualisation
+import pandas
 
 # used for authentication, OAUTH
 consumer_key = 'Ro42n9uw4qqUygzjxAWd8C3EU'
@@ -72,6 +75,10 @@ com = defaultdict(lambda : defaultdict(int))
 search_word = "python"
 
 fname = 'python.json'
+
+# Time visualization
+dates_IDE = []
+
 # Json data set opening
 with open(fname, 'r') as f:
     count_all = Counter()
@@ -98,6 +105,10 @@ with open(fname, 'r') as f:
         # Update the counter as per name suggests
         count_all.update(terms_only)
 
+        # track when the hashtag is mentioned
+        if '#ide' in terms_hash:
+            dates_IDE.append(tweet['created-at'])
+
         # Updates the counter if search_word in terms_only
         if search_word in terms_only:
             count_search.update(terms_only)
@@ -108,6 +119,14 @@ with open(fname, 'r') as f:
                 w1, w2 = sorted([terms_only[i], terms_only[j]])
                 if w1 != w2:
                     com[w1][w2] += 1
+    # A list of "1"s to count the hashtags
+    ones = [1] * len(dates_IDE)
+    # index of the series
+    idx = pandas.DatetimeIndex(dates_IDE)
+    # actual series (series of ones at moment)
+    IDE = pandas.Series(ones, index=idx)
+    # Resampling / bucketing
+    per_minute = IDE.resample('1Min', how='sum').fillna(0)
 
     # Prints the result for co-occurences for search_word
     print("Co-occurences for %s" %search_word)
@@ -126,8 +145,16 @@ with open(fname, 'r') as f:
     # Print the first 5 most frequent words
     """print(count_all.most_common(10))"""
 
-    word_freq = count_all.most_common(10)
+    # Visual representation without time reference
+    """
+    word_freq = count_all.most_common(20)
     labels, freq = zip(*word_freq)
     data = {'data':freq, 'x':labels}
     bar = vincent.Bar(data, iter_idx='x')
     bar.to_json('term_freq.json')
+    """
+
+    # Visual representation with time reference
+    time_chart = vincent.Line(IDE)
+    time_chart.axis_titles(x='Time', y='Freq')
+    time_chart.to_json('time_chart.json')
